@@ -318,6 +318,10 @@ const FONT_USE={
   TV축하:   "신라문화"    // 글자를 다 모았을 때 뜨는 큰 글자
 };
 
+/* 3) 첫 화면에 바로 보이는 자리 — 이 자리 글꼴만 페이지를 열자마자 받고, 나머지는 첫 화면이 뜬 뒤 뒤에서 받습니다.
+      (큰 글꼴을 한꺼번에 받으면 첫 화면 글꼴이 늦게 와서 로딩이 느려짐) */
+const FONT_FIRST=["기본","본문","제목","조번호","TV기본","TV창제목","TV창본문"];
+
 /* ---------- 여기부터는 고치지 않아도 됩니다 ---------- */
 // 자리마다 화면의 어느 부분인지 (CSS 선택자)
 const FONT_SLOTS={
@@ -338,13 +342,20 @@ const FONT_SLOTS={
   const fmt=f=>/\.woff2$/i.test(f)?"woff2":/\.woff$/i.test(f)?"woff":/\.otf$/i.test(f)?"opentype":"truetype";
   const tv=!!document.querySelector("#rv"), mine=k=>tv?/^TV/.test(k):!/^TV/.test(k);
   const used=[...new Set(Object.keys(FONT_USE).filter(mine).map(k=>FONT_USE[k]))].filter(n=>FONT_LIST[n]);
-  let css="";
+  const first=new Set(Object.keys(FONT_USE).filter(k=>mine(k)&&FONT_FIRST.includes(k)).map(k=>FONT_USE[k]));
+  let css="", later=[];
   used.forEach(n=>{ const f=FONT_LIST[n]; if(f.system) return;
     [[f.file,400],[f.bold,700]].forEach(([file,w])=>{ if(!file) return;
       const url=dir+encodeURI(file);
       const adj=f.size&&f.size!==100?`size-adjust:${f.size}%;`:"";   // 글꼴별 크기 배율
-      css+=`@font-face{font-family:"${fam(n)}";font-weight:${w};src:url("${url}") format("${fmt(file)}");font-display:block;${adj}}\n`;
-      const l=document.createElement("link"); l.rel="preload"; l.as="font"; l.href=url; l.crossOrigin="anonymous"; document.head.appendChild(l); }); });
+      // 게임: 글꼴이 올 때까지 글자를 잠깐 숨김(block, 도트 글씨가 기본 글씨로 깜빡이지 않게). TV: 기본 글씨로 먼저 보여 주고 바꿈(swap)
+      css+=`@font-face{font-family:"${fam(n)}";font-weight:${w};src:url("${url}") format("${fmt(file)}");font-display:${tv?"swap":"block"};${adj}}\n`;
+      if(first.has(n)){ const l=document.createElement("link"); l.rel="preload"; l.as="font"; l.type="font/woff2"; l.href=url; l.crossOrigin="anonymous"; document.head.appendChild(l); }
+      else later.push(`${w} 1em "${fam(n)}"`); }); });
+  // 첫 화면이 뜨고 나면 나머지 글꼴을 하나씩 뒤에서 받아 둠 (나중 화면에서 글자가 비어 보이지 않게)
+  const warm=()=>{ if(!document.fonts||!document.fonts.load) return; let i=0;
+    const next=()=>{ if(i>=later.length) return; document.fonts.load(later[i++]).then(next,next); }; next(); };
+  if(document.readyState==="complete") setTimeout(warm,300); else addEventListener("load",()=>setTimeout(warm,300));
   Object.keys(FONT_USE).filter(mine).forEach(k=>{ const n=FONT_USE[k], f=FONT_LIST[n], sel=FONT_SLOTS[k];
     if(!f||!sel){ console.warn("글꼴 설정 확인:",k,n); return; }
     const stack=f.system?f.system:`"${fam(n)}","Apple SD Gothic Neo","Malgun Gothic",sans-serif`;
@@ -361,58 +372,58 @@ const FONT_SLOTS={
 <div class="wrap" id="app"></div>
 <script>
 /* 그림 경로 모음. 그림 파일은 img/ 폴더에 있습니다. */
-const IMG={gate:"img/gate.png",
-  street:"img/street.png",
+const IMG={gate:"img/gate.webp",
+  street:"img/street.webp",
   };
 Object.assign(IMG,{
-  interro:"img/interro.png",
-  press:"img/press.png",
-  key:"img/key.png",
-  ribbon:"img/ribbon.png",
-  poem:"img/poem.png"});
-IMG.room="img/room.png";
+  interro:"img/interro.webp",
+  press:"img/press.webp",
+  key:"img/key.webp",
+  ribbon:"img/ribbon.webp",
+  poem:"img/poem.webp"});
+IMG.room="img/room.webp";
 /* 3단계 미니게임(타자기 리본 걸기) 그림. 색 순서는 game.js의 WCOL과 같게: 빨강, 파랑, 노랑, 초록 */
-IMG.m3={bg:"img/m3_bg.png",
-  tip:["img/m3_tip_red.png","img/m3_tip_blue.png","img/m3_tip_yellow.png","img/m3_tip_green.png"],
-  hook:["img/m3_hook_red.png","img/m3_hook_blue.png","img/m3_hook_yellow.png","img/m3_hook_green.png"],
-  hookDone:["img/m3_hook_done_red.png","img/m3_hook_done_blue.png","img/m3_hook_done_yellow.png","img/m3_hook_done_green.png"],
-  ribbon:["img/m3_ribbon_red.png","img/m3_ribbon_blue.png","img/m3_ribbon_yellow.png","img/m3_ribbon_green.png"],
-  spark:["img/m3_spark_1.png","img/m3_spark_2.png","img/m3_spark_3.png","img/m3_spark_4.png"]};
+IMG.m3={bg:"img/m3_bg.webp",
+  tip:["img/m3_tip_red.webp","img/m3_tip_blue.webp","img/m3_tip_yellow.webp","img/m3_tip_green.webp"],
+  hook:["img/m3_hook_red.webp","img/m3_hook_blue.webp","img/m3_hook_yellow.webp","img/m3_hook_green.webp"],
+  hookDone:["img/m3_hook_done_red.webp","img/m3_hook_done_blue.webp","img/m3_hook_done_yellow.webp","img/m3_hook_done_green.webp"],
+  ribbon:["img/m3_ribbon_red.webp","img/m3_ribbon_blue.webp","img/m3_ribbon_yellow.webp","img/m3_ribbon_green.webp"],
+  spark:["img/m3_spark_1.webp","img/m3_spark_2.webp","img/m3_spark_3.webp","img/m3_spark_4.webp"]};
 Object.assign(IMG,{
-  guard:"img/guard.png",
-  guardCalm:"img/guardCalm.png",
-  guardSus:"img/guardSus.png",
-  boss:"img/boss.png",
-  bossSus:"img/bossSus.png",
-  contact:"img/contact.png",
-  contactSide:"img/contactSide.png",
-  contactHappy:"img/contactHappy.png",
-  courier:"img/courier.png",          // 배달부로 위장한 접선책 (보류 장면, 배드엔딩)
-  courierSide:"img/courierSide.png",
+  guard:"img/guard.webp",
+  guardCalm:"img/guardCalm.webp",
+  guardSus:"img/guardSus.webp",
+  boss:"img/boss.webp",
+  bossSus:"img/bossSus.webp",
+  contact:"img/contact.webp",
+  contactSide:"img/contactSide.webp",
+  contactHappy:"img/contactHappy.webp",
+  courier:"img/courier.webp",          // 배달부로 위장한 접선책 (보류 장면, 배드엔딩)
+  courierSide:"img/courierSide.webp",
   });
 const BLP={
-  guard:{s:"img/blink_guard.png", l:36.722,t:29.231,w:34.025},
-  guardCalm:{s:"img/blink_guardCalm.png", l:36.722,t:29.231,w:34.025},
-  guardSus:{s:"img/blink_guardSus.png", l:36.722,t:29.231,w:34.025},
-  boss:{s:"img/blink_boss.png", l:37.311,t:29.231,w:28.908},
-  bossSus:{s:"img/blink_bossSus.png", l:37.311,t:29.231,w:28.908},
-  contact:{s:"img/blink_contact.png", l:37.278,t:31.538,w:27.416},
-  contactSide:{s:"img/blink_contactSide.png", l:37.278,t:31.538,w:27.416},
-  contactHappy:{s:"img/blink_contactHappy.png", l:37.278,t:31.538,w:27.416},
-  courier:{s:"img/blink_courier.png", l:37.081,t:29.808,w:25.838},
-  courierSide:{s:"img/blink_courierSide.png", l:42.801,t:30.192,w:23.274}
+  guard:{s:"img/blink_guard.webp", l:36.722,t:29.231,w:34.025},
+  guardCalm:{s:"img/blink_guardCalm.webp", l:36.722,t:29.231,w:34.025},
+  guardSus:{s:"img/blink_guardSus.webp", l:36.722,t:29.231,w:34.025},
+  boss:{s:"img/blink_boss.webp", l:37.311,t:29.231,w:28.908},
+  bossSus:{s:"img/blink_bossSus.webp", l:37.311,t:29.231,w:28.908},
+  contact:{s:"img/blink_contact.webp", l:37.278,t:31.538,w:27.416},
+  contactSide:{s:"img/blink_contactSide.webp", l:37.278,t:31.538,w:27.416},
+  contactHappy:{s:"img/blink_contactHappy.webp", l:37.278,t:31.538,w:27.416},
+  courier:{s:"img/blink_courier.webp", l:37.081,t:29.808,w:25.838},
+  courierSide:{s:"img/blink_courierSide.webp", l:42.801,t:30.192,w:23.274}
 };
 const CUT={
-  window:{s:"img/cut_window.png", x:118,y:27,w:191,h:215},
-  calendar:{s:"img/cut_calendar.png", x:328,y:94,w:57,h:79},
-  poster:{s:"img/cut_poster.png", x:411,y:67,w:90,h:113},
-  clock:{s:"img/cut_clock.png", x:528,y:52,w:81,h:84},
-  cabinet:{s:"img/cut_cabinet.png", x:16,y:154,w:88,h:248},
-  typewriter:{s:"img/cut_typewriter.png", x:348,y:207,w:85,h:66},   // y를 215→207로 올려 의자 등받이를 덮지 않게
-  lamp:{s:"img/cut_lamp.png", x:450,y:196,w:73,h:87},
-  trash:{s:"img/cut_trash.png", x:574,y:326,w:55,h:75},
-  door:{s:"img/cut_door.png", x:635,y:89,w:160,h:304},
-  drawer:{s:"img/cut_drawer.png", x:226,y:296,w:94,h:94}
+  window:{s:"img/cut_window.webp", x:118,y:27,w:191,h:215},
+  calendar:{s:"img/cut_calendar.webp", x:328,y:94,w:57,h:79},
+  poster:{s:"img/cut_poster.webp", x:411,y:67,w:90,h:113},
+  clock:{s:"img/cut_clock.webp", x:528,y:52,w:81,h:84},
+  cabinet:{s:"img/cut_cabinet.webp", x:16,y:154,w:88,h:248},
+  typewriter:{s:"img/cut_typewriter.webp", x:348,y:207,w:85,h:66},   // y를 215→207로 올려 의자 등받이를 덮지 않게
+  lamp:{s:"img/cut_lamp.webp", x:450,y:196,w:73,h:87},
+  trash:{s:"img/cut_trash.webp", x:574,y:326,w:55,h:75},
+  door:{s:"img/cut_door.webp", x:635,y:89,w:160,h:304},
+  drawer:{s:"img/cut_drawer.webp", x:226,y:296,w:94,h:94}
 };
 
 /* ===== 서랍 미니게임 그림 자리 =====
@@ -423,20 +434,20 @@ const DRAWER={
   bg:"",   // 서랍 속 바닥 그림 (예: img/drawer_inside.png 를 따옴표 안에). 비우면 나무 무늬 임시 바닥.
   /* 열쇠는 게임을 열 때마다 물건 밑 아무 데나 랜덤으로 놓입니다 (물건 2개 이상에 덮이는 자리만 골라요).
      w, h는 열쇠 크기(%)입니다. x, y는 코드가 정하므로 적지 않아도 됩니다. */
-  key:{w:16,h:26,s:"img/key_big.png"},
+  key:{w:16,h:26,s:"img/key_big.webp"},
   items:{
-    paper: {x:3, y:4, w:46,h:53,r:-8,s:"img/drawer_paper.png"},
-    ledger:{x:14,y:42,w:30,h:56,r:6,s:"img/drawer_ledger.png"},
-    bundle:{x:40,y:34,w:44,h:60,r:-4,s:"img/drawer_bundle.png"},
-    stamp: {x:3, y:62,w:20,h:36,r:-12,s:"img/drawer_stamp.png"},
-    tin:   {x:68,y:4, w:24,h:40,r:-6,s:"img/drawer_tin.png"},
-    lens:  {x:73,y:56,w:22,h:36,r:10,s:"img/drawer_lens.png"},
-    pen:   {x:30,y:22,w:40,h:10,r:18,s:"img/drawer_pen.png"}
+    paper: {x:3, y:4, w:46,h:53,r:-8,s:"img/drawer_paper.webp"},
+    ledger:{x:14,y:42,w:30,h:56,r:6,s:"img/drawer_ledger.webp"},
+    bundle:{x:40,y:34,w:44,h:60,r:-4,s:"img/drawer_bundle.webp"},
+    stamp: {x:3, y:62,w:20,h:36,r:-12,s:"img/drawer_stamp.webp"},
+    tin:   {x:68,y:4, w:24,h:40,r:-6,s:"img/drawer_tin.webp"},
+    lens:  {x:73,y:56,w:22,h:36,r:10,s:"img/drawer_lens.webp"},
+    pen:   {x:30,y:22,w:40,h:10,r:18,s:"img/drawer_pen.webp"}
   }
 };
 /* ===== 서류함 미니게임 그림 자리 =====
    bossBack: 상관이 등 돌리고 서류 보는 그림. 비우면 boss 그림을 어둡게 해서 대신 씁니다. */
-IMG.bossBack="img/bossBack.png";
+IMG.bossBack="img/bossBack.webp";
 // 2단계 문서에 찍히는 도장 그림 (교실 TV의 도장과 같은 모양). 화면에서는 game.html의 .stamp 가 씀, 여기 적어 두면 미리 받아 둠
 IMG.stampDelete="img/stamp_delete.webp"; IMG.stampPass="img/stamp_pass.webp";
 

@@ -28,8 +28,20 @@ def font_files():
             print("  fonts.js 에 없는 글꼴 이름:", n); continue
         out |= {"fonts/" + f for f in re.findall(r'(?:file|bold)\s*:\s*"([^"]+)"', m.group(1))}
     return out
+def to_webp(src, dstp):
+    # 도트 그림이 뭉개지지 않게 손실 없는(lossless) WebP로 바꿈. 더 커지면 False (PNG 그대로 씀)
+    try:
+        from PIL import Image
+    except ImportError:
+        return False
+    Image.open(src).save(dstp, "WEBP", lossless=True, method=6)
+    if os.path.getsize(dstp) >= os.path.getsize(src):
+        os.remove(dstp); return False
+    return True
 def copy_assets(dst):
+    global html
     used = set(re.findall(r'"(img/[^"]+\.(?:png|webp))"', html)) | font_files()
+    webp = 0
     for d in ("img", "fonts"):
         shutil.rmtree(os.path.join(dst, d), ignore_errors=True)
     for p in sorted(used):
@@ -37,8 +49,11 @@ def copy_assets(dst):
         if not os.path.exists(src):
             print("  파일이 없어 건너뜀:", p); continue
         os.makedirs(os.path.dirname(os.path.join(dst, p)), exist_ok=True)
+        # img/ 의 PNG는 WebP로 바꿔 내보내고 HTML 속 주소도 바꿈 (원본 PNG는 img/에 그대로, 34%쯤 가벼워짐)
+        if p.startswith("img/") and p.endswith(".png") and to_webp(src, os.path.join(dst, p[:-4] + ".webp")):
+            html = html.replace('"' + p + '"', '"' + p[:-4] + '.webp"'); webp += 1; continue
         shutil.copy2(src, os.path.join(dst, p))
-    print("  그림·글꼴", len(used), "개 복사")
+    print("  그림·글꼴", len(used), "개 복사 (그중 PNG→WebP", webp, "개)")
 os.makedirs(os.path.join(ROOT, "dist"), exist_ok=True)
 os.makedirs(os.path.join(ROOT, "dist", "game"), exist_ok=True)
 copy_assets(os.path.join(ROOT, "dist", "game"))

@@ -759,6 +759,10 @@ const FONT_USE={
   TV축하:   "신라문화"    // 글자를 다 모았을 때 뜨는 큰 글자
 };
 
+/* 3) 첫 화면에 바로 보이는 자리 — 이 자리 글꼴만 페이지를 열자마자 받고, 나머지는 첫 화면이 뜬 뒤 뒤에서 받습니다.
+      (큰 글꼴을 한꺼번에 받으면 첫 화면 글꼴이 늦게 와서 로딩이 느려짐) */
+const FONT_FIRST=["기본","본문","제목","조번호","TV기본","TV창제목","TV창본문"];
+
 /* ---------- 여기부터는 고치지 않아도 됩니다 ---------- */
 // 자리마다 화면의 어느 부분인지 (CSS 선택자)
 const FONT_SLOTS={
@@ -779,13 +783,20 @@ const FONT_SLOTS={
   const fmt=f=>/\.woff2$/i.test(f)?"woff2":/\.woff$/i.test(f)?"woff":/\.otf$/i.test(f)?"opentype":"truetype";
   const tv=!!document.querySelector("#rv"), mine=k=>tv?/^TV/.test(k):!/^TV/.test(k);
   const used=[...new Set(Object.keys(FONT_USE).filter(mine).map(k=>FONT_USE[k]))].filter(n=>FONT_LIST[n]);
-  let css="";
+  const first=new Set(Object.keys(FONT_USE).filter(k=>mine(k)&&FONT_FIRST.includes(k)).map(k=>FONT_USE[k]));
+  let css="", later=[];
   used.forEach(n=>{ const f=FONT_LIST[n]; if(f.system) return;
     [[f.file,400],[f.bold,700]].forEach(([file,w])=>{ if(!file) return;
       const url=dir+encodeURI(file);
       const adj=f.size&&f.size!==100?`size-adjust:${f.size}%;`:"";   // 글꼴별 크기 배율
-      css+=`@font-face{font-family:"${fam(n)}";font-weight:${w};src:url("${url}") format("${fmt(file)}");font-display:block;${adj}}\n`;
-      const l=document.createElement("link"); l.rel="preload"; l.as="font"; l.href=url; l.crossOrigin="anonymous"; document.head.appendChild(l); }); });
+      // 게임: 글꼴이 올 때까지 글자를 잠깐 숨김(block, 도트 글씨가 기본 글씨로 깜빡이지 않게). TV: 기본 글씨로 먼저 보여 주고 바꿈(swap)
+      css+=`@font-face{font-family:"${fam(n)}";font-weight:${w};src:url("${url}") format("${fmt(file)}");font-display:${tv?"swap":"block"};${adj}}\n`;
+      if(first.has(n)){ const l=document.createElement("link"); l.rel="preload"; l.as="font"; l.type="font/woff2"; l.href=url; l.crossOrigin="anonymous"; document.head.appendChild(l); }
+      else later.push(`${w} 1em "${fam(n)}"`); }); });
+  // 첫 화면이 뜨고 나면 나머지 글꼴을 하나씩 뒤에서 받아 둠 (나중 화면에서 글자가 비어 보이지 않게)
+  const warm=()=>{ if(!document.fonts||!document.fonts.load) return; let i=0;
+    const next=()=>{ if(i>=later.length) return; document.fonts.load(later[i++]).then(next,next); }; next(); };
+  if(document.readyState==="complete") setTimeout(warm,300); else addEventListener("load",()=>setTimeout(warm,300));
   Object.keys(FONT_USE).filter(mine).forEach(k=>{ const n=FONT_USE[k], f=FONT_LIST[n], sel=FONT_SLOTS[k];
     if(!f||!sel){ console.warn("글꼴 설정 확인:",k,n); return; }
     const stack=f.system?f.system:`"${fam(n)}","Apple SD Gothic Neo","Malgun Gothic",sans-serif`;
