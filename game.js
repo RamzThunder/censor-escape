@@ -144,7 +144,7 @@ function roomHTML(){
    ${["cabinet","door","trash"].map(k=>`<ellipse cx="${CUT[k].x+CUT[k].w/2}" cy="${CUT[k].y+CUT[k].h-1}" rx="${CUT[k].w*0.52}" ry="5" fill="#000" opacity=".35"/>`).join("")}
    <defs><radialGradient id="lg"><stop offset="0" stop-color="#ffc861" stop-opacity=".30"/><stop offset="1" stop-color="#ffc861" stop-opacity="0"/></radialGradient></defs><ellipse cx="487" cy="262" rx="70" ry="50" fill="url(#lg)"/>
    ${hs("window","창문",118,27,191,215)}${hs("calendar","달력",326,94,62,79)}${hs("poster","검열 기준 포스터",408,67,96,113)}${hs("clock","벽시계",528,49,80,89)}
-   ${hs("cabinet","서류함",2,151,116,252)}${hs("drawer","책상 서랍",225,297,95,94)}${hs("typewriter","타자기",346,213,89,66)}${hs("lamp","스탠드",442,190,84,89)}
+   ${hs("cabinet","서류함",2,151,116,252)}${hs("drawer","책상 서랍",225,297,95,94)}${hs("typewriter","타자기",346,205,89,66)}${hs("lamp","스탠드",442,190,84,89)}
    ${hs("trash","휴지통",576,338,54,62)}${hs("door","문",635,89,160,304)}
   </svg></div>
   <div class="cap" id="cap" aria-hidden="true">${T(TEXT.room.hover)}</div>

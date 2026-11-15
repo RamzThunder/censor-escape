@@ -46,7 +46,7 @@ const CUT={
   poster:{s:"img/cut_poster.png", x:411,y:67,w:90,h:113},
   clock:{s:"img/cut_clock.png", x:528,y:52,w:81,h:84},
   cabinet:{s:"img/cut_cabinet.png", x:16,y:154,w:88,h:248},
-  typewriter:{s:"img/cut_typewriter.png", x:348,y:215,w:85,h:66},
+  typewriter:{s:"img/cut_typewriter.png", x:348,y:207,w:85,h:66},   // y를 215→207로 올려 의자 등받이를 덮지 않게
   lamp:{s:"img/cut_lamp.png", x:450,y:196,w:73,h:87},
   trash:{s:"img/cut_trash.png", x:574,y:326,w:55,h:75},
   door:{s:"img/cut_door.png", x:635,y:89,w:160,h:304},
