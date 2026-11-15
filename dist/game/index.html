@@ -158,7 +158,7 @@ textarea{min-height:92px;resize:vertical;font-family:var(--serif);font-size:18px
 .kw{font:inherit;font-family:var(--serif);font-size:16px;background:transparent;color:var(--fg);border:1px solid var(--amber);padding:2px 12px;cursor:pointer}
 .kw:active{background:var(--amber);color:#111}
 .kwframe{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.kwftxt{font-family:var(--serif);font-size:16px;white-space:pre-line}
+.kwftxt{font-family:var(--serif);font-size:16px;white-space:pre-wrap}
 .kwframe .kw{font-family:inherit;font-size:13px}
 .ckbox{display:flex;flex-direction:column;gap:4px;font-size:14px}
 .ck{opacity:.65}
@@ -510,25 +510,41 @@ const CONFIG={
   s3:{draft:"오늘 밤 여기에서 일본 경찰 몰래 국권 회복을 위한 선언문을 찍는다!",
     banned:["일본","일제","총독부","경찰","선언문","독립","만세","국권","왜놈","식민","침략","왜구"],
     symbols:["봄","겨울","새벽","별","씨앗","꽃","강","달","해","아침","불씨","바람","나무","그날","님","뿌리","눈","얼음","밤","새"],
-    /* 힌트 1-①: 본보기. 2단계에서 본 시가 무엇을 무엇으로 바꿨는지 보여 줍니다 */
+    /* 힌트는 조마다 다르게 나옵니다: 아래 목록에서 방 번호와 조 번호로 섞어 골라 보여 줍니다 (같은 조는 다시 열어도 같음)
+       pick: 한 조에 보여 줄 개수. 목록에 줄을 더 넣으면 더 다양해집니다 */
+    pick:{models:2, words:3, recover:4, frames:3},
+    /* 힌트 1-①: 본보기. 1·2단계에서 본 시가 무엇을 무엇으로 바꿨는지 (pick.models개) */
     models:[
       {poem:"이육사 「절정」", line:"겨울은 강철로 된 무지갠가 보다", was:"혹독한 시대", now:"겨울"},
-      {poem:"이육사 「청포도」", line:"내가 바라는 손님은 고달픈 몸으로", was:"기다리는 광복", now:"손님"}
+      {poem:"이육사 「청포도」", line:"내가 바라는 손님은 고달픈 몸으로", was:"기다리는 광복", now:"손님"},
+      {poem:"한용운 「님의 침묵」", line:"님은 갔습니다. 아아, 사랑하는 나의 님은 갔습니다.", was:"잃어버린 나라", now:"님"},
+      {poem:"이상화 「빼앗긴 들에도 봄은 오는가」", line:"지금은 남의 땅 빼앗긴 들에도 봄은 오는가", was:"되찾을 날", now:"봄"},
+      {poem:"윤동주 「서시」", line:"별을 노래하는 마음으로", was:"어둠 속에서도 지키는 희망", now:"별"}
     ],
     /* 힌트 1-②: 추천 키워드. 전할 메시지의 조각(of)마다 바꿔 쓸 말(words). 누르면 시 칸에 들어갑니다.
+       조마다 words에서 pick.words개(국권 회복은 pick.recover개)를 골라 보여 줍니다.
        검열 통과에는 symbols 낱말이 시에 하나 이상 있어야 합니다 ("여기에서" 줄 말고는 symbols 속 말이 섞여 있음) */
     keywords:[
-      {of:"오늘 밤", words:["달 뜨는 밤","별 하나 없는 밤","겨울밤"]},
-      {of:"여기에서", words:["이 뜰에서","이 작은 방에서","이 우물가에서"]},
-      {of:"몰래 (감시를 피해)", words:["찬 바람 잠든 사이","눈 내리는 사이","얼음 밑에서"]},
-      {of:"선언문을 찍는다", words:["씨앗을 뿌린다","꽃잎을 찍어 낸다","불씨를 옮긴다"]},
-      {of:"국권 회복", words:["봄","새벽","아침","그날"]}
+      {of:"오늘 밤", words:["달 뜨는 밤","별 하나 없는 밤","겨울밤","그믐달 뜬 밤","눈 내리는 밤","서리 내린 밤","어둠 짙은 밤","달도 숨은 밤","바람 부는 밤"]},
+      {of:"여기에서", words:["이 뜰에서","이 작은 방에서","이 우물가에서","이 골방에서","이 처마 밑에서","이 등잔 밑에서","이 나무 아래에서","이 마루에서","이 오두막에서"]},
+      {of:"몰래 (감시를 피해)", words:["찬 바람 잠든 사이","눈 내리는 사이","얼음 밑에서","새들이 깨기 전","달빛 숨은 사이","바람 소리 숨죽여","눈보라 그친 틈에","얼음 밑 강물처럼","꽃잎 지듯 조용히"]},
+      {of:"선언문을 찍는다", words:["씨앗을 뿌린다","꽃잎을 찍어 낸다","불씨를 옮긴다","새벽을 찍어 낸다","별빛을 새긴다","꽃씨를 찍어 둔다","봄 편지를 찍는다","해를 떠 낸다","씨앗에 봄을 새긴다"]},
+      {of:"국권 회복", words:["봄","새벽","아침","그날","해","봄꽃","새봄","꽃"]}
     ],
-    /* 힌트 2: 빈칸 시 틀. 「시 칸에 넣기」를 누르면 시 칸 끝에 들어가고, 학생이 ( ) 자리를 채웁니다 */
+    /* 힌트 2: 빈칸 시 틀 (pick.frames개). 「시 칸에 넣기」를 누르면 시 칸 끝에 들어가고, 학생이 ( ) 자리를 채웁니다. \n은 줄 바꿈 */
     frames:[
       "(       ) 깊은 오늘 밤\n이 (       )에서 (       )을 뿌린다",
       "(       )이 잠든 사이\n여기서 (       )을 한 장씩 찍어 낸다",
-      "(       )이 오기 전 오늘 밤\n이 자리에서 (       ) 하나 옮겨 붙인다"
+      "(       )이 오기 전 오늘 밤\n이 자리에서 (       ) 하나 옮겨 붙인다",
+      "(       ) 내리는 오늘 밤\n이 (       ) 밑에서 (       )을 새긴다",
+      "오늘 밤 (       )도 숨었으니\n여기서 (       )을 한 장 한 장 눌러 찍는다",
+      "(       ) 소리 숨죽인 밤\n이 (       )에서 (       )을 피워 낸다",
+      "(       )이 깨기 전 오늘 밤\n이 (       )에 (       )을 찍어 둔다",
+      "(       ) 밑을 흐르는 강처럼\n오늘 밤 여기서 (       )을 옮겨 적는다",
+      "오늘 밤 이 (       ) 아래에서\n(       )의 꽃잎을 한 장씩 찍어 띄운다",
+      "(       )이 깊은 오늘 밤\n이 골목 끝에서 (       )을 몰래 찍어 낸다",
+      "어둠 짙은 오늘 밤\n이 (       )에서 (       )을 종이마다 찍는다",
+      "(       ) 치는 오늘 밤\n여기 (       ) 앞에서 (       )를 하나씩 찍어 낸다"
     ],
     /* 힌트 3: 키워드를 조합한 예시 한 줄 (오늘 밤 + 여기 + 찍는다가 다 들어감). 16개 = 8개씩 두 묶음.
        방 번호에 따라 1~8번 또는 9~16번 묶음을 쓰고, 그 안에서 조 번호대로 하나씩 받아 한 반 안에서는 겹치지 않습니다.
@@ -1504,14 +1520,21 @@ function bindStage3(){
   // 힌트 1: 본보기 + 추천 키워드 / 힌트 2: 빈칸 시 틀 / 힌트 3: 키워드를 조합한 첫 줄
   // 몇 번째 힌트까지 썼는지는 S.h3에 남겨, 시를 고치러 돌아와도 힌트 상자가 그대로 보임
   const rh=[...String(S.room||"")].reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,0), sets=Math.max(1,Math.floor(s.lines.length/8));
+  // 방 번호·조 번호·목록 이름으로 정해지는 섞기: 조마다 다른 낱말·틀이 나오고, 같은 조는 다시 열어도 같음
+  const pick=(arr,n,salt)=>{ let x=(rh^((S.group||1)*2654435761)^[...salt].reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,7))>>>0||1;
+    const rnd=()=>{ x^=x<<13; x>>>=0; x^=x>>>17; x^=x<<5; x>>>=0; return x/4294967296; };
+    const a=arr.map((v,i)=>[v,i]); for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a.slice(0,n).sort((p,q)=>p[1]-q[1]).map(p=>p[0]); };
+  const P=s.pick||{}, models=pick(s.models,P.models||2,"m"), frames=pick(s.frames,P.frames||3,"f");
+  const keywords=s.keywords.map((g,i)=>({of:g.of, words:pick(g.words, i===s.keywords.length-1?(P.recover||4):(P.words||3), "k"+i)}));
   const ex=s.lines[(((S.group||1)-1)+8*(rh%sets))%s.lines.length], X=TEXT.s3;   // 방 번호로 8개 묶음을 고르고, 묶음 안에서 조 번호대로
   const paintHint=()=>{ const n=S.h3||0, kw=$("#kw"); let h="";
-    if(n>=1) h+=`<div class="kwbox"><b>${T(X.modelTitle)}</b>${s.models.map(m=>`<div class="kwmodel">‘${esc(m.line)}’ <span class="note">${esc(m.poem)} · ${esc(m.was)} ${T(X.modelArrow)} <b>${esc(m.now)}</b></span></div>`).join("")}
-      <b>${T(X.keywordTitle)}</b>${s.keywords.map(g=>`<div class="kwrow"><span class="kwof">${esc(g.of)}</span><span class="kws">${g.words.map(w=>`<button type="button" class="kw" data-w="${esc(w)}">${esc(w)}</button>`).join("")}</span></div>`).join("")}</div>`;
-    if(n>=2) h+=`<div class="kwbox">${s.frames.map((f,i)=>`<div class="kwframe"><div class="kwftxt">${esc(f)}</div><button type="button" class="kw" data-f="${i}">${T(X.frameBtn)}</button></div>`).join("")}</div>`;
+    if(n>=1) h+=`<div class="kwbox"><b>${T(X.modelTitle)}</b>${models.map(m=>`<div class="kwmodel">‘${esc(m.line)}’ <span class="note">${esc(m.poem)} · ${esc(m.was)} ${T(X.modelArrow)} <b>${esc(m.now)}</b></span></div>`).join("")}
+      <b>${T(X.keywordTitle)}</b>${keywords.map(g=>`<div class="kwrow"><span class="kwof">${esc(g.of)}</span><span class="kws">${g.words.map(w=>`<button type="button" class="kw" data-w="${esc(w)}">${esc(w)}</button>`).join("")}</span></div>`).join("")}</div>`;
+    if(n>=2) h+=`<div class="kwbox">${frames.map((f,i)=>`<div class="kwframe"><div class="kwftxt">${esc(f)}</div><button type="button" class="kw" data-f="${i}">${T(X.frameBtn)}</button></div>`).join("")}</div>`;
     if(kw.dataset.n!==String(n)){ kw.dataset.n=n; kw.innerHTML=h;
       kw.querySelectorAll(".kw[data-w]").forEach(b=>b.onclick=()=>put(b.dataset.w));
-      kw.querySelectorAll(".kw[data-f]").forEach(b=>b.onclick=()=>{ const f=s.frames[+b.dataset.f], v=t1.value; put((v&&!v.endsWith("\n")?"\n":"")+f,true); }); }
+      kw.querySelectorAll(".kw[data-f]").forEach(b=>b.onclick=()=>{ const f=frames[+b.dataset.f], v=t1.value; put((v&&!v.endsWith("\n")?"\n":"")+f,true); }); }
     if(n>=3){ t2.placeholder="예) "+ex.mean; $("#hn").disabled=true; $("#hn").textContent=T(X.hintDone); } };
   paintHint();
   $("#hn").onclick=()=>{ const n=S.h3||0; if(n>=3) return; hint(); S.h3=n+1; save();

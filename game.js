@@ -539,14 +539,21 @@ function bindStage3(){
   // 힌트 1: 본보기 + 추천 키워드 / 힌트 2: 빈칸 시 틀 / 힌트 3: 키워드를 조합한 첫 줄
   // 몇 번째 힌트까지 썼는지는 S.h3에 남겨, 시를 고치러 돌아와도 힌트 상자가 그대로 보임
   const rh=[...String(S.room||"")].reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,0), sets=Math.max(1,Math.floor(s.lines.length/8));
+  // 방 번호·조 번호·목록 이름으로 정해지는 섞기: 조마다 다른 낱말·틀이 나오고, 같은 조는 다시 열어도 같음
+  const pick=(arr,n,salt)=>{ let x=(rh^((S.group||1)*2654435761)^[...salt].reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,7))>>>0||1;
+    const rnd=()=>{ x^=x<<13; x>>>=0; x^=x>>>17; x^=x<<5; x>>>=0; return x/4294967296; };
+    const a=arr.map((v,i)=>[v,i]); for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a.slice(0,n).sort((p,q)=>p[1]-q[1]).map(p=>p[0]); };
+  const P=s.pick||{}, models=pick(s.models,P.models||2,"m"), frames=pick(s.frames,P.frames||3,"f");
+  const keywords=s.keywords.map((g,i)=>({of:g.of, words:pick(g.words, i===s.keywords.length-1?(P.recover||4):(P.words||3), "k"+i)}));
   const ex=s.lines[(((S.group||1)-1)+8*(rh%sets))%s.lines.length], X=TEXT.s3;   // 방 번호로 8개 묶음을 고르고, 묶음 안에서 조 번호대로
   const paintHint=()=>{ const n=S.h3||0, kw=$("#kw"); let h="";
-    if(n>=1) h+=`<div class="kwbox"><b>${T(X.modelTitle)}</b>${s.models.map(m=>`<div class="kwmodel">‘${esc(m.line)}’ <span class="note">${esc(m.poem)} · ${esc(m.was)} ${T(X.modelArrow)} <b>${esc(m.now)}</b></span></div>`).join("")}
-      <b>${T(X.keywordTitle)}</b>${s.keywords.map(g=>`<div class="kwrow"><span class="kwof">${esc(g.of)}</span><span class="kws">${g.words.map(w=>`<button type="button" class="kw" data-w="${esc(w)}">${esc(w)}</button>`).join("")}</span></div>`).join("")}</div>`;
-    if(n>=2) h+=`<div class="kwbox">${s.frames.map((f,i)=>`<div class="kwframe"><div class="kwftxt">${esc(f)}</div><button type="button" class="kw" data-f="${i}">${T(X.frameBtn)}</button></div>`).join("")}</div>`;
+    if(n>=1) h+=`<div class="kwbox"><b>${T(X.modelTitle)}</b>${models.map(m=>`<div class="kwmodel">‘${esc(m.line)}’ <span class="note">${esc(m.poem)} · ${esc(m.was)} ${T(X.modelArrow)} <b>${esc(m.now)}</b></span></div>`).join("")}
+      <b>${T(X.keywordTitle)}</b>${keywords.map(g=>`<div class="kwrow"><span class="kwof">${esc(g.of)}</span><span class="kws">${g.words.map(w=>`<button type="button" class="kw" data-w="${esc(w)}">${esc(w)}</button>`).join("")}</span></div>`).join("")}</div>`;
+    if(n>=2) h+=`<div class="kwbox">${frames.map((f,i)=>`<div class="kwframe"><div class="kwftxt">${esc(f)}</div><button type="button" class="kw" data-f="${i}">${T(X.frameBtn)}</button></div>`).join("")}</div>`;
     if(kw.dataset.n!==String(n)){ kw.dataset.n=n; kw.innerHTML=h;
       kw.querySelectorAll(".kw[data-w]").forEach(b=>b.onclick=()=>put(b.dataset.w));
-      kw.querySelectorAll(".kw[data-f]").forEach(b=>b.onclick=()=>{ const f=s.frames[+b.dataset.f], v=t1.value; put((v&&!v.endsWith("\n")?"\n":"")+f,true); }); }
+      kw.querySelectorAll(".kw[data-f]").forEach(b=>b.onclick=()=>{ const f=frames[+b.dataset.f], v=t1.value; put((v&&!v.endsWith("\n")?"\n":"")+f,true); }); }
     if(n>=3){ t2.placeholder="예) "+ex.mean; $("#hn").disabled=true; $("#hn").textContent=T(X.hintDone); } };
   paintHint();
   $("#hn").onclick=()=>{ const n=S.h3||0; if(n>=3) return; hint(); S.h3=n+1; save();
