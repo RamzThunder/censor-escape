@@ -538,7 +538,8 @@ function bindStage3(){
     t1.value=t1.value.slice(0,a)+w+t1.value.slice(z); t1.focus(); t1.setSelectionRange(a+w.length,a+w.length); t1.oninput(); };
   // 힌트 1: 본보기 + 추천 키워드 / 힌트 2: 빈칸 시 틀 / 힌트 3: 키워드를 조합한 첫 줄
   // 몇 번째 힌트까지 썼는지는 S.h3에 남겨, 시를 고치러 돌아와도 힌트 상자가 그대로 보임
-  const ex=s.lines[((S.group||1)-1)%s.lines.length], X=TEXT.s3;
+  const rh=[...String(S.room||"")].reduce((h,c)=>(h*31+c.charCodeAt(0))>>>0,0), sets=Math.max(1,Math.floor(s.lines.length/8));
+  const ex=s.lines[(((S.group||1)-1)+8*(rh%sets))%s.lines.length], X=TEXT.s3;   // 방 번호로 8개 묶음을 고르고, 묶음 안에서 조 번호대로
   const paintHint=()=>{ const n=S.h3||0, kw=$("#kw"); let h="";
     if(n>=1) h+=`<div class="kwbox"><b>${T(X.modelTitle)}</b>${s.models.map(m=>`<div class="kwmodel">‘${esc(m.line)}’ <span class="note">${esc(m.poem)} · ${esc(m.was)} ${T(X.modelArrow)} <b>${esc(m.now)}</b></span></div>`).join("")}
       <b>${T(X.keywordTitle)}</b>${s.keywords.map(g=>`<div class="kwrow"><span class="kwof">${esc(g.of)}</span><span class="kws">${g.words.map(w=>`<button type="button" class="kw" data-w="${esc(w)}">${esc(w)}</button>`).join("")}</span></div>`).join("")}</div>`;
