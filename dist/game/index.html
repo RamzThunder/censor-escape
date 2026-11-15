@@ -67,7 +67,7 @@ p{margin:0}
 .vch button{text-align:left;background:#232733;border:1px solid var(--line);padding:11px 14px;min-height:46px}
 .vch button:hover,.vch button:focus-visible{border-color:var(--amber)}
 .vnx{position:absolute;right:14px;bottom:8px;color:var(--amber);animation:pl 1.2s infinite}
-.vtop{display:flex;justify-content:space-between;color:var(--mute);font-size:13px;padding-bottom:8px}
+.vtop{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--mute);font-size:13px;padding-bottom:8px}
 .vtop button{background:none;border:0;color:var(--mute);text-decoration:underline}
 .vflash{color:#ff9a8c;font-size:14px;min-height:1.3em}
 .panel{position:fixed;inset:0;z-index:15;background:var(--bg);overflow:auto;padding-top:env(safe-area-inset-top,0px);
@@ -1049,13 +1049,13 @@ let vnTimer=null, vnStop=()=>{};
 })();
 function playVN(script,done){
   const a=$("#app"); let i=0, typing=false, full="", pos=0, bg="gate";
-  a.innerHTML=`<div class="vn"><div class="vtop"><span>${S.group}조</span><button type="button" id="vskip">${T(TEXT.common.skip)}</button></div>
+  a.innerHTML=`<div class="vn"><div class="vtop"><span>${S.group}조</span><span class="sus" title="의심도"><span>의심도</span><span class="g"><i></i></span></span><button type="button" id="vskip">${T(TEXT.common.skip)}</button></div>
    <div class="pixwrap" id="vstage"></div>
    <div class="vbox" id="vbox" tabindex="0"><div class="vnm" id="vnm"></div><div class="vtx" id="vtx" aria-live="polite"></div><div class="vflash" id="vfl"></div><div class="vch" id="vch"></div><span class="vnx" id="vnx">▼</span></div></div>`;
   let capTimer=null;
   vnStop=()=>{clearInterval(vnTimer);clearTimeout(capTimer);};
   const end=()=>{vnStop();done();};
-  $("#vskip").onclick=end;
+  $("#vskip").onclick=end; paintSus();   // 대사 장면(프롤로그 등)에서도 의심도 바를 보여 줌
   const idx=id=>script.findIndex(x=>x.id===id);
   let lastStage="";
   const show=()=>{

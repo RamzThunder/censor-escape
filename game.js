@@ -57,13 +57,13 @@ let vnTimer=null, vnStop=()=>{};
 })();
 function playVN(script,done){
   const a=$("#app"); let i=0, typing=false, full="", pos=0, bg="gate";
-  a.innerHTML=`<div class="vn"><div class="vtop"><span>${S.group}조</span><button type="button" id="vskip">${T(TEXT.common.skip)}</button></div>
+  a.innerHTML=`<div class="vn"><div class="vtop"><span>${S.group}조</span><span class="sus" title="의심도"><span>의심도</span><span class="g"><i></i></span></span><button type="button" id="vskip">${T(TEXT.common.skip)}</button></div>
    <div class="pixwrap" id="vstage"></div>
    <div class="vbox" id="vbox" tabindex="0"><div class="vnm" id="vnm"></div><div class="vtx" id="vtx" aria-live="polite"></div><div class="vflash" id="vfl"></div><div class="vch" id="vch"></div><span class="vnx" id="vnx">▼</span></div></div>`;
   let capTimer=null;
   vnStop=()=>{clearInterval(vnTimer);clearTimeout(capTimer);};
   const end=()=>{vnStop();done();};
-  $("#vskip").onclick=end;
+  $("#vskip").onclick=end; paintSus();   // 대사 장면(프롤로그 등)에서도 의심도 바를 보여 줌
   const idx=id=>script.findIndex(x=>x.id===id);
   let lastStage="";
   const show=()=>{
