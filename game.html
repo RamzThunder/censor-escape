@@ -148,6 +148,24 @@ textarea{min-height:92px;resize:vertical;font-family:var(--serif);font-size:18px
 .banned{display:flex;gap:6px;flex-wrap:wrap}
 .banned span{border:1px solid var(--stamp);color:#ff9a8c;padding:1px 10px;font-size:14px}
 .banned span.hit{background:var(--stamp);color:#fff;text-decoration:line-through}
+#kw:empty{display:none}
+#kw{display:flex;flex-direction:column;gap:10px}
+.kwbox{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px dashed var(--amber)}
+.kwmodel{font-family:var(--serif);font-size:16px}
+.kwrow{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.kwof{font-size:13px;opacity:.8;min-width:9.5em}
+.kws{display:flex;gap:6px;flex-wrap:wrap}
+.kw{font:inherit;font-family:var(--serif);font-size:16px;background:transparent;color:var(--fg);border:1px solid var(--amber);padding:2px 12px;cursor:pointer}
+.kw:active{background:var(--amber);color:#111}
+.kwframe{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.kwftxt{font-family:var(--serif);font-size:16px;white-space:pre-line}
+.kwframe .kw{font-family:inherit;font-size:13px}
+.ckbox{display:flex;flex-direction:column;gap:4px;font-size:14px}
+.ck{opacity:.65}
+.ck[data-k]::before{content:"□ ";}
+.ck.on{opacity:1;color:var(--ok)}
+.ck.on::before{content:"☑ ";}
+.ck.self{display:flex;gap:6px;align-items:center;opacity:1;cursor:pointer}
 .glist{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .glist button{background:var(--panel);border:1px solid var(--line);padding:14px 0;font-size:20px;font-weight:700}
 .glist button.on{border-color:var(--amber);background:#2a2619}

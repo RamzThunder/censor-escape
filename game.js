@@ -513,16 +513,47 @@ function stage3HTML(){
   <textarea id="t1" placeholder="${esc(T(TEXT.s3.poemPlaceholder))}"></textarea>
   <label for="t2"><b>${T(TEXT.s3.meanLabel)}</b> <span class="note">${T(TEXT.s3.meanNote)}</span></label>
   <textarea id="t2" style="min-height:70px" placeholder="${esc(T(TEXT.s3.meanPlaceholder))}"></textarea>
+  <div class="ckbox" id="ck"><b>${T(TEXT.s3.checkTitle)}</b>${["lines","banned","symbol","mean"].map(k=>`<div class="ck" data-k="${k}">${T(TEXT.s3.checks[k])}</div>`).join("")}
+  <label class="ck self"><input type="checkbox" id="ckself"> ${T(TEXT.s3.checks.self)}</label></div>
+  <div id="kw"></div>
   <div class="row"><button class="btn" id="chk" type="button">${T(TEXT.s3.submit)}</button><button class="btn ghost" id="hn" type="button">${T(TEXT.common.hintBtn)}</button></div>
   <div class="msg" id="msg" aria-live="polite"></div><div id="gate"></div></div></div>`;
 }
 function bindStage3(){
   const s=CONFIG.s3, t1=$("#t1");
   const hits=()=>s.banned.filter(w=>t1.value.includes(w));
-  t1.oninput=()=>document.querySelectorAll("#bw span").forEach(sp=>sp.classList.toggle("hit",t1.value.includes(sp.dataset.w)));
-  let hs=0;
-  $("#hn").onclick=()=>{hint();$("#msg").className="msg";
-    $("#msg").innerHTML=hs===0?T(TEXT.s3.hint1):T(TEXT.s3.hint2,{상징:s.symbols.slice(0,8).join(", ")}); hs=1;};
+  // 점검표: 시·숨은 뜻을 쓰는 동안 검열 조건을 저절로 체크 (제출 전에 무엇이 모자란지 보임)
+  const t2=$("#t2");
+  const paintCheck=()=>{ const v=t1.value.trim(), ok={
+      lines:v.length>=12&&v.split(/\n/).filter(x=>x.trim()).length>=2,
+      banned:!!v&&!hits().length,
+      symbol:s.symbols.some(w=>v.includes(w)),
+      mean:t2.value.trim().length>=6};
+    document.querySelectorAll("#ck .ck[data-k]").forEach(d=>d.classList.toggle("on",ok[d.dataset.k])); };
+  t1.oninput=()=>{ document.querySelectorAll("#bw span").forEach(sp=>sp.classList.toggle("hit",t1.value.includes(sp.dataset.w))); paintCheck(); };
+  t2.oninput=paintCheck; paintCheck();
+  // 시 칸 커서 자리(없으면 끝)에 글을 넣음
+  const put=(w,end)=>{ if(t1.disabled) return; const L=t1.value.length;
+    const a=end?L:(t1.selectionStart??L), z=end?L:(t1.selectionEnd??a);
+    t1.value=t1.value.slice(0,a)+w+t1.value.slice(z); t1.focus(); t1.setSelectionRange(a+w.length,a+w.length); t1.oninput(); };
+  // 힌트 1: 본보기 + 추천 키워드 / 힌트 2: 빈칸 시 틀 / 힌트 3: 키워드를 조합한 첫 줄
+  // 몇 번째 힌트까지 썼는지는 S.h3에 남겨, 시를 고치러 돌아와도 힌트 상자가 그대로 보임
+  const ex=s.lines[((S.group||1)-1)%s.lines.length], X=TEXT.s3;
+  const paintHint=()=>{ const n=S.h3||0, kw=$("#kw"); let h="";
+    if(n>=1) h+=`<div class="kwbox"><b>${T(X.modelTitle)}</b>${s.models.map(m=>`<div class="kwmodel">‘${esc(m.line)}’ <span class="note">${esc(m.poem)} · ${esc(m.was)} ${T(X.modelArrow)} <b>${esc(m.now)}</b></span></div>`).join("")}
+      <b>${T(X.keywordTitle)}</b>${s.keywords.map(g=>`<div class="kwrow"><span class="kwof">${esc(g.of)}</span><span class="kws">${g.words.map(w=>`<button type="button" class="kw" data-w="${esc(w)}">${esc(w)}</button>`).join("")}</span></div>`).join("")}</div>`;
+    if(n>=2) h+=`<div class="kwbox">${s.frames.map((f,i)=>`<div class="kwframe"><div class="kwftxt">${esc(f)}</div><button type="button" class="kw" data-f="${i}">${T(X.frameBtn)}</button></div>`).join("")}</div>`;
+    if(kw.dataset.n!==String(n)){ kw.dataset.n=n; kw.innerHTML=h;
+      kw.querySelectorAll(".kw[data-w]").forEach(b=>b.onclick=()=>put(b.dataset.w));
+      kw.querySelectorAll(".kw[data-f]").forEach(b=>b.onclick=()=>{ const f=s.frames[+b.dataset.f], v=t1.value; put((v&&!v.endsWith("\n")?"\n":"")+f,true); }); }
+    if(n>=3){ t2.placeholder="예) "+ex.mean; $("#hn").disabled=true; $("#hn").textContent=T(X.hintDone); } };
+  paintHint();
+  $("#hn").onclick=()=>{ const n=S.h3||0; if(n>=3) return; hint(); S.h3=n+1; save();
+    const m=$("#msg"); m.className="msg";
+    if(n===0) m.innerHTML=T(X.hint1);
+    else if(n===1) m.innerHTML=T(X.hint2);
+    else{ if(!t1.value.includes(ex.line)) t1.value=ex.line+"\n"+t1.value.replace(/^\s+/,""); t1.oninput(); t1.focus(); t1.setSelectionRange(t1.value.length,t1.value.length); m.innerHTML=T(X.hint3); }
+    paintHint(); };
   $("#chk").onclick=()=>{
     const m=$("#msg"), v=t1.value.trim(), why=$("#t2").value.trim(), h=hits();
     if(h.length){m.className="msg bad";m.innerHTML=T(TEXT.s3.caught,{낱말:h.join("’, ‘")});addSus(15);return;}
