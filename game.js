@@ -271,8 +271,11 @@ function stage2HTML(){
     <div class="txt">${markWords(esc(d.text),d.marks).replace(/\n/g,"<br>")}</div>
     <div class="choices" role="group" aria-label="표현 방식">${TYPES.map(t=>`<button type="button" class="ch" data-d="${i}" data-t="${t}">${TLABEL[t]}</button>`).join("")}</div>
     <span class="stamp ${d.type==="직접"?"":"pass"}" id="st${i}">${d.type==="직접"?"삭제":"통과"}</span></div>`).join("");
+  // 표현 방식별 문서 수를 미리 알려 줌 (CONFIG.docs에서 셈)
+  const cnt=TYPES.map(t=>`<span>${TLABEL[t]} <b>${CONFIG.docs.filter(d=>d.type===t).length}개</b></span>`).join("");
   return `<div style="display:flex;flex-direction:column;gap:14px"><h2>${T(TEXT.s2.title)}</h2>
   <p class="story">${T(TEXT.s2.story)}</p>
+  <div class="tcount"><h3>${T(TEXT.s2.count)}</h3>${cnt}</div>
   <div id="quiz"></div>
   <div class="grid">${docs}</div>
   <div class="row"><button class="btn" id="chk" type="button">${T(TEXT.s2.submit)}</button><button class="btn ghost" id="hn" type="button">${T(TEXT.common.hintBtn)}</button></div>
