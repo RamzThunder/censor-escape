@@ -218,7 +218,9 @@ function introHTML(){
 /* ---------- 1단계 ---------- */
 function stage1HTML(){
   const cards=CONFIG.cards.map((c,i)=>{
-    const toks=c.text.map((ln,li)=>ln.split(" ").map((w,wi)=>`<button type="button" class="tok" data-c="${i}" data-w="${li}-${wi}" data-t="${esc(w)}">${esc(w)}</button>`).join(" ")).join("<br>");
+    // 근거 낱말(clues)은 처음부터 표시해 둠 (학생은 시기만 고름). 글자는 눌러도 바뀌지 않음
+    const isClue=w=>c.clues.some(k=>w.includes(k));
+    const toks=c.text.map(ln=>ln.split(" ").map(w=>`<span class="tok${isClue(w)?" sel":""}">${esc(w)}</span>`).join(" ")).join("<br>");
     const chs=CONFIG.periods.map(p=>`<button type="button" class="ch" data-c="${i}" data-p="${p}">${p}</button>`).join("");
     // 시인·작품 이름과 힌트는 처음부터 보여 줌 (난이도 낮춤)
     return `<div class="paper" id="card${i}"><span class="no">${T(TEXT.s1.card)} ${["①","②","③","④"][i]||i+1}</span>
@@ -233,10 +235,7 @@ function stage1HTML(){
   <div class="msg" id="msg" aria-live="polite"></div></div>`;
 }
 function bindStage1(){
-  ui.sel={};ui.per={};
-  $$(".tok").forEach(b=>b.onclick=()=>{b.classList.toggle("sel");
-    const k=b.dataset.c; ui.sel[k]=ui.sel[k]||new Set(); const t=b.dataset.t; const key=b.dataset.w;
-    ui.sel[k].has(key)?ui.sel[k].delete(key):ui.sel[k].add(key); b.dataset.on=ui.sel[k].has(key)?"1":"";});
+  ui.per={};
   document.querySelectorAll(".ch").forEach(b=>b.onclick=()=>{const c=b.dataset.c;ui.per[c]=b.dataset.p;
     document.querySelectorAll(`.ch[data-c="${c}"]`).forEach(x=>x.classList.toggle("on",x===b));});
   let hstep=0;
@@ -244,16 +243,14 @@ function bindStage1(){
     const open=CONFIG.cards.findIndex((c,i)=>!$("#card"+i).classList.contains("ok")); if(open<0) return;
     hint(); const c=CONFIG.cards[open];
     if(hstep===0){ $("#msg").className="msg"; $("#msg").innerHTML=T(TEXT.s1.hint1); hstep=1; }
-    else{ document.querySelectorAll(`.tok[data-c="${open}"]`).forEach(t=>{ if(c.clues.some(k=>t.dataset.t.includes(k))) t.classList.add("hint");});
+    else{ const b=document.querySelector(`.ch[data-c="${open}"][data-p="${c.answer}"]`); if(b) b.classList.add("hint");   // 두 번째 힌트: 맞는 시기 버튼에 붉은 테두리
       $("#msg").innerHTML=T(TEXT.s1.hint2,{번호:open+1}); }
   };
   $("#chk").onclick=()=>{
     let all=true, wrong=0;
     CONFIG.cards.forEach((c,i)=>{
       const el=$("#card"+i); if(el.classList.contains("ok")) return;
-      const words=[...document.querySelectorAll(`.tok[data-c="${i}"].sel`)].map(t=>t.dataset.t);
-      const clueHit=words.some(w=>c.clues.some(k=>w.includes(k)||k.includes(w)));
-      const good=ui.per[i]===c.answer&&clueHit;
+      const good=ui.per[i]===c.answer;   // 근거 낱말은 미리 표시되어 있으므로 시기만 맞으면 됨
       el.classList.remove("bad");
       if(good){el.classList.add("ok"); const w=$("#why"+i); w.hidden=false; w.textContent=T(TEXT.s1.cardOk,{시기:c.answer}); el.querySelectorAll("button").forEach(b=>b.disabled=true);}
       else{all=false; wrong++; void el.offsetWidth; el.classList.add("bad");}
