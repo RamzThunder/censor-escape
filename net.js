@@ -29,6 +29,14 @@ function netPush(force){
   _netSig=sig; _netAt=now;
   try{ fetch(netUrl(S.room,S.group),{method:"PUT",body:JSON.stringify(d),keepalive:true}).catch(()=>{}); }catch(e){}
 }
+// 시작 화면: 이 방의 조별 기록을 한 번에 받아 옴 (인터넷이 안 되면 null)
+function netGroups(room){
+  if(!netRoomOk(room)) return Promise.resolve(null);
+  try{ return fetch(`${NET.db}/${NET.root}/${encodeURIComponent(room)}/groups.json`,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null); }catch(e){ return Promise.resolve(null); }
+}
+// 이미 다른 기기가 쓰는 조인지: 1단계를 시작했거나, 끝났거나(탈출·붙잡힘), 1분 안에 신호를 보냈으면 '사용 중'
+// (기기는 늦어도 약 12초마다 신호를 보냄. 기록 초기화를 하면 모두 풀림)
+const netTaken=g=>!!g&&(g.start>0||g.done>0||g.caught>0||Date.now()-(g.t||0)<60000);
 function netClear(room,g){ if(!netRoomOk(room)) return Promise.resolve();
   const del=u=>{ try{ return fetch(u,{method:"DELETE"}).catch(()=>{}); }catch(e){ return Promise.resolve(); } };
   // 방 전체는 규칙상 한 번에 못 지우므로, 조마다 groups·poems·verdict 칸을 한 요청으로 비웁니다

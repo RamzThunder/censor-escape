@@ -183,13 +183,30 @@ function startHTML(){
   <p class="story">${T(TEXT.start.story)}</p>
   <div class="card"><h3>${T(TEXT.start.roomLabel)}</h3><input id="room" class="roomin" type="text" inputmode="text" maxlength="12" autocomplete="off" placeholder="${esc(TEXT.start.roomHint)}" value="${esc(S.room||new URLSearchParams(location.search).get("room")||"")}"></div>
   <div class="card"><h3>${T(TEXT.start.pick)}</h3><div class="glist" id="gl">${g}</div>
-  <button class="btn" id="ok" type="button" disabled>${T(TEXT.start.enter)}</button></div></div>`;
+  <button class="btn" id="ok" type="button" disabled>${T(TEXT.start.enter)}</button><div id="gmsg" aria-live="polite"></div></div></div>`;
 }
 function bindStart(){
-  let pick=null;
-  document.querySelectorAll("#gl button").forEach(b=>b.onclick=()=>{pick=+b.dataset.g;
-    document.querySelectorAll("#gl button").forEach(x=>x.classList.toggle("on",x===b)); $("#ok").disabled=false;});
-  $("#ok").onclick=()=>{ const r=($("#room").value||"").trim(); S.room=(typeof netRoomOk==="function"&&netRoomOk(r))?r:""; S.group=pick;S.stage=0;save();render();};
+  // 같은 방에 이미 다른 기기가 들어온 모둠은 '사용 중'으로 표시하고 막음 (선생님 비밀번호로는 들어갈 수 있음)
+  let pick=null, taken={}, timer=null, typing=null;
+  const btns=()=>document.querySelectorAll("#gl button");
+  const roomVal=()=>($("#room").value||"").trim();
+  const online=r=>typeof netGroups==="function"&&netRoomOk(r);
+  const paint=()=>btns().forEach(b=>{ const n=+b.dataset.g, t=!!taken[n]; b.classList.toggle("taken",t);
+    b.innerHTML=n+(t?`<small>${esc(TEXT.start.taken)}</small>`:""); });
+  const check=()=>{ const r=roomVal(); if(!online(r)){ taken={}; paint(); return Promise.resolve(taken); }
+    return netGroups(r).then(gs=>{ if(roomVal()!==r) return taken;
+      taken={}; Object.entries(gs||{}).forEach(([n,g])=>{ if(netTaken(g)) taken[+n]=1; }); paint(); return taken; }); };
+  const enter=()=>{ clearInterval(timer); const r=roomVal(); S.room=netRoomOk(r)?r:""; S.group=pick;S.stage=0;save();render(); };
+  const showTaken=()=>{ const m=$("#gmsg");
+    m.innerHTML=`<p class="msg bad">${T(TEXT.start.takenMsg,{번호:pick})}</p><p class="note">${T(TEXT.start.takenPin)}</p>
+      <div class="row"><input id="gpin" class="roomin" type="password" inputmode="numeric" autocomplete="off" style="flex:1;min-width:0"><button class="btn ghost" id="gpok" type="button">${T(TEXT.start.takenPinBtn)}</button></div>`;
+    $("#gpok").onclick=()=>{ if($("#gpin").value===CONFIG.teacherPin) enter(); else $("#gmsg .msg").textContent=T(TEXT.start.takenPinWrong); }; };
+  btns().forEach(b=>b.onclick=()=>{ pick=+b.dataset.g; btns().forEach(x=>x.classList.toggle("on",x===b)); $("#ok").disabled=false;
+    if(taken[pick]) showTaken(); else $("#gmsg").innerHTML=""; });
+  // 들어가기 직전에 한 번 더 확인 (그 사이 다른 기기가 들어왔을 수 있음)
+  $("#ok").onclick=()=>{ $("#ok").disabled=true; check().then(t=>{ $("#ok").disabled=false; t[pick]?showTaken():enter(); }); };
+  $("#room").addEventListener("input",()=>{ clearTimeout(typing); typing=setTimeout(check,500); });
+  check(); timer=setInterval(()=>{ if(!document.body.contains($("#gl"))) return clearInterval(timer); check(); },5000);
 }
 function introHTML(){
   return `<div class="wrap" style="padding:0"><div style="display:flex;flex-direction:column;gap:16px;padding-top:24px">

@@ -169,6 +169,10 @@ textarea{min-height:92px;resize:vertical;font-family:var(--serif);font-size:18px
 .glist{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .glist button{background:var(--panel);border:1px solid var(--line);padding:14px 0;font-size:20px;font-weight:700}
 .glist button.on{border-color:var(--amber);background:#2a2619}
+/* 다른 기기가 이미 들어온 모둠 */
+.glist button.taken{opacity:.45;border-style:dashed;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0}
+.glist button.taken small{font-size:11px;font-weight:400;color:var(--stamp)}
+.glist button.taken.on{opacity:.8;border-color:var(--stamp)}
 .big{font-family:var(--serif);font-size:clamp(64px,22vw,120px);line-height:1;color:var(--amber);text-align:center;border:3px solid var(--amber);padding:18px;align-self:center;min-width:1.7em}
 .stats{display:flex;gap:18px;flex-wrap:wrap;color:var(--mute)}
 .stats b{color:var(--fg);font-variant-numeric:tabular-nums}
