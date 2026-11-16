@@ -680,7 +680,8 @@ function bindFoot(){
 /* 관리 모드: 교실 TV에서 조마다 켜고 끕니다(net.js의 netCtl이 받아 옴). 학생 화면에는 켜는 버튼이 없습니다.
    켜지면 화면 구석에 ‘메뉴’와 ‘넘기기 ▶’가 생겨 단계를 바로 넘길 수 있습니다. 기기에 기억하지 않습니다. */
 let teacherMode=false; try{localStorage.removeItem("censor-escape-teacher");}catch(e){}   // 예전 버전이 기억해 둔 교사 모드 지우기
-function setTeacherMode(on){ teacherMode=!!on; if(!on) document.querySelectorAll(".overlay.tmenu").forEach(x=>x.remove()); paintTeacher(); }
+// 'tmode' 표시: 관리 모드일 때만 화면 아래 '처음부터 다시'가 보임 (학생이 다 끝내고 눌러 버리는 일 막기)
+function setTeacherMode(on){ teacherMode=!!on; document.body.classList.toggle("tmode",teacherMode); if(!on) document.querySelectorAll(".overlay.tmenu").forEach(x=>x.remove()); paintTeacher(); }
 // 바로 가기 목록: [이름, 상태를 맞추고 화면을 여는 함수]
 const JUMPS=[
   ["프롤로그",()=>{S.stage=0;}],
