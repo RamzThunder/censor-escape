@@ -2,6 +2,9 @@
 
 드라마 「100일의 거짓말」 연계 수업용 HTML 방탈출 게임입니다.
 
+- 레포: `RamzThunder/censor-escape` (2026-11 `gugeo` 레포에서 분리, gugeo 레포는 gugeo.party 첫 페이지를 맡음)
+- 주소: https://censor.gugeo.party/game/ (학생), https://censor.gugeo.party/tv/ (교실 TV)
+
 ## 파일 구성
 | 파일 | 내용 |
 |---|---|
@@ -54,7 +57,8 @@
 
 ### 교실 TV — 조별 진행 상황 실시간 보기
 - 주소: 학생용은 `…/dist/game/`, 교실 TV는 `…/dist/tv/`입니다.
-  - GitHub Pages: 학생 `https://ramzthunder.github.io/gugeo/dist/game/`, TV `https://ramzthunder.github.io/gugeo/dist/tv/`
+  - 수업 주소: 학생 `https://censor.gugeo.party/game/`, TV `https://censor.gugeo.party/tv/` (Cloudflare가 이 레포의 `dist/` 폴더를 그대로 서비스)
+  - 예전 주소 `gugeo.party/game/`, `gugeo.party/tv/`는 gugeo 레포에서 이 주소로 넘겨 줍니다.
   - TV에서 열면 **방 번호**와 학생 입장 QR이 나옵니다. QR은 같은 주소의 `/game/`으로 안내합니다.
 - 고칠 때는 `teacher.html`을 고치고 `python3 build.py`를 실행하면 `dist/tv/index.html`이 새로 만들어집니다.
 - 학생은 QR로 들어오거나, 시작 화면의 "교실 TV에 나온 방 번호"에 번호를 넣으면 됩니다. 번호를 비우면 TV에는 안 나오고 게임은 그대로 됩니다.
