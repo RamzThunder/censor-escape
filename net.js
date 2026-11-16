@@ -32,7 +32,26 @@ function netPush(force){
 // 시작 화면: 이 방의 조별 기록을 한 번에 받아 옴 (인터넷이 안 되면 null)
 function netGroups(room){
   if(!netRoomOk(room)) return Promise.resolve(null);
-  try{ return fetch(`${NET.db}/${NET.root}/${encodeURIComponent(room)}/groups.json`,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null); }catch(e){ return Promise.resolve(null); }
+  try{ return fetch(`${NET.db}/${NET.root}/${encodeURIComponent(room)}/groups.json`,{cache:"no-store"}).then(r=>r.ok?r.json().then(j=>j||{}):null).catch(()=>null); }catch(e){ return Promise.resolve(null); }
+}
+// 비어 있는 모둠 번호를 하나 맡음. 성공하면 번호, 모두 찼으면 0, 연결이 안 되면 -1.
+// 두 기기가 동시에 같은 번호를 맡지 않도록: 'where' 칸에 이 기기만의 표시를 써 두고 1.2초 뒤 다시 읽어
+// 내 표시가 남아 있으면 내 자리, 다른 기기 표시로 바뀌었으면 다음 빈 번호로 넘어감 (Firebase 규칙은 그대로)
+async function netClaimGroup(room){
+  const skip={}, wait=ms=>new Promise(r=>setTimeout(r,ms));
+  for(let tries=0;tries<CONFIG.groups+2;tries++){
+    const gs=await netGroups(room); if(!gs) return -1;
+    let n=0; for(let i=1;i<=CONFIG.groups;i++) if(!skip[i]&&!netTaken(gs[i])){ n=i; break; }
+    if(!n) return 0;
+    const tag="c"+Math.random().toString(36).slice(2,10);
+    const ok=await fetch(netUrl(room,n),{method:"PUT",body:JSON.stringify({stage:0,sus:0,start:0,where:tag,t:Date.now()})}).then(r=>r.ok).catch(()=>false);
+    if(!ok) return -1;
+    await wait(1200);
+    const me=await fetch(netUrl(room,n),{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
+    if(me&&me.where===tag) return n;
+    skip[n]=1;
+  }
+  return 0;
 }
 // 이미 다른 기기가 쓰는 조인지: 1단계를 시작했거나, 끝났거나(탈출·붙잡힘), 1분 안에 신호를 보냈으면 '사용 중'
 // (기기는 늦어도 약 12초마다 신호를 보냄. 기록 초기화를 하면 모두 풀림)

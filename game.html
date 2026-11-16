@@ -34,7 +34,7 @@ h3{font-size:15px;color:var(--mute);font-weight:500;letter-spacing:.04em}
 p{margin:0}
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:12px;align-items:center;flex-wrap:wrap;
   background:var(--bg);border-bottom:1px solid var(--line);padding-block:10px}
-.bar .grp{font-weight:700}
+.bar .grp{font-size:19px;padding:2px 9px}
 .bar .time{margin-left:auto;font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;letter-spacing:.03em}
 .bar .time.over{color:var(--stamp)}
 .sus{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute)}
@@ -169,10 +169,12 @@ textarea{min-height:92px;resize:vertical;font-family:var(--serif);font-size:18px
 .glist{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .glist button{background:var(--panel);border:1px solid var(--line);padding:14px 0;font-size:20px;font-weight:700}
 .glist button.on{border-color:var(--amber);background:#2a2619}
-/* 다른 기기가 이미 들어온 모둠 */
-.glist button.taken{opacity:.45;border-style:dashed;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0}
-.glist button.taken small{font-size:11px;font-weight:400;color:var(--stamp)}
-.glist button.taken.on{opacity:.8;border-color:var(--stamp)}
+/* 모둠 번호: 저절로 정해지므로 화면 맨 위(방·대사 장면)에 노란 명찰로 크게, 안내 화면에는 아주 크게 */
+.grp{font-weight:800;font-size:22px;line-height:1.2;background:var(--amber);color:#1a1408;padding:3px 12px;letter-spacing:.02em;white-space:nowrap}
+.vtop .grp{font-size:20px}
+@media(max-width:380px){.bar{gap:8px}.bar .sus .g{width:60px}}   /* 좁은 폰: 명찰이 커져도 남은 시간이 한 줄에 */
+.gbig{text-align:center;font-family:var(--serif);font-size:clamp(28px,7vw,40px);font-weight:800;color:var(--amber);line-height:1}
+.gbig b{display:inline-block;font-size:clamp(88px,26vw,140px);margin-right:4px}
 .big{font-family:var(--serif);font-size:clamp(64px,22vw,120px);line-height:1;color:var(--amber);text-align:center;border:3px solid var(--amber);padding:18px;align-self:center;min-width:1.7em}
 .stats{display:flex;gap:18px;flex-wrap:wrap;color:var(--mute)}
 .stats b{color:var(--fg);font-variant-numeric:tabular-nums}

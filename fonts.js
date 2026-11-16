@@ -87,7 +87,7 @@ const FONT_SLOTS={
   기본:"body,button,input,.choices,.paper .no",
   본문:".vtx,.vch button,.story,.note,.msg,.toast,.cap,.card p,.key,.why",
   제목:"h1,h2", 도장:".stamp", 종이글:".paper .txt", 시쓰기:"textarea,.paper .txt.poem", 자막:".vcap span",
-  이름표:".vnm,.mbub", 글자조각:".big", 조번호:".bar .grp,.vtop span",
+  이름표:".vnm,.mbub", 글자조각:".big", 조번호:".bar .grp,.vtop span,.gbig",
   TV기본:"body,button,input", TV숫자:".code b,.lim b", TV남은시간:".g .tm", TV의심도숫자:".g .sus b",
   TV창제목:"#confirm-title,#setup h2", TV창본문:"#confirm-message,#action-confirm button,#setup input,#setup button",
   TV조번호:".g .no", TV통신:"#ct", TV글자조각:".piece .ch", TV모은글자:".slot",
