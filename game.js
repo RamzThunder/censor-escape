@@ -272,10 +272,11 @@ function stage2HTML(){
     <div class="choices" role="group" aria-label="표현 방식">${TYPES.map(t=>`<button type="button" class="ch" data-d="${i}" data-t="${t}">${TLABEL[t]}</button>`).join("")}</div>
     <span class="stamp ${d.type==="직접"?"":"pass"}" id="st${i}">${d.type==="직접"?"삭제":"통과"}</span></div>`).join("");
   // 표현 방식별 문서 수를 미리 알려 줌 (CONFIG.docs에서 셈)
-  const cnt=TYPES.map(t=>`<span>${TLABEL[t]} <b>${CONFIG.docs.filter(d=>d.type===t).length}개</b></span>`).join("");
+  // 고르는 대로 '남은 N개 / 다 골랐어요 / N개 많아요'가 바뀜 (paintCount)
+  const cnt=TYPES.map(t=>`<span data-t="${t}">${TLABEL[t]} <b>${CONFIG.docs.filter(d=>d.type===t).length}개</b><em></em></span>`).join("");
   return `<div style="display:flex;flex-direction:column;gap:14px"><h2>${T(TEXT.s2.title)}</h2>
   <p class="story">${T(TEXT.s2.story)}</p>
-  <div class="tcount"><h3>${T(TEXT.s2.count)}</h3>${cnt}</div>
+  <div class="tcount" id="tcount"><h3>${T(TEXT.s2.count)}</h3>${cnt}<small id="tleft"></small></div>
   <div id="quiz"></div>
   <div class="grid">${docs}</div>
   <div class="row"><button class="btn" id="chk" type="button">${T(TEXT.s2.submit)}</button><button class="btn ghost" id="hn" type="button">${T(TEXT.common.hintBtn)}</button></div>
@@ -283,8 +284,20 @@ function stage2HTML(){
 }
 function bindStage2(){
   ui.cls={};
+  // 표현 방식별로 몇 개 남았는지 바로 보여 줌
+  const paintCount=()=>{
+    document.querySelectorAll("#tcount span[data-t]").forEach(s=>{ const t=s.dataset.t;
+      const need=CONFIG.docs.filter(d=>d.type===t).length, got=Object.values(ui.cls).filter(x=>x===t).length, e=s.querySelector("em");
+      s.className=got===need?"full":got>need?"over":"";
+      e.textContent=got===need?T(TEXT.s2.countDone):got>need?T(TEXT.s2.countOver,{n:got-need}):T(TEXT.s2.countLeft,{n:need-got}); });
+    const left=CONFIG.docs.length-Object.keys(ui.cls).length;
+    $("#tleft").textContent=left?T(TEXT.s2.countUnpicked,{n:left}):""; };
   document.querySelectorAll(".ch[data-d]").forEach(b=>b.onclick=()=>{const d=b.dataset.d;ui.cls[d]=b.dataset.t;
-    document.querySelectorAll(`.ch[data-d="${d}"]`).forEach(x=>x.classList.toggle("on",x===b));});
+    document.querySelectorAll(`.ch[data-d="${d}"]`).forEach(x=>x.classList.toggle("on",x===b)); paintCount();});
+  paintCount();
+  // 문서를 보느라 내려도 개수 상자가 맨 위 상태줄 바로 아래에 붙어 있게
+  const tc=$("#tcount"), pb=tc&&tc.closest(".pwrap"), br=pb&&pb.querySelector(".bar");
+  if(br) requestAnimationFrame(()=>{ tc.style.top=br.offsetHeight+"px"; });
   let hs=0;
   $("#hn").onclick=()=>{hint(); $("#msg").className="msg";
     $("#msg").innerHTML=T(hs===0?TEXT.s2.hint1:TEXT.s2.hint2); hs=1;};

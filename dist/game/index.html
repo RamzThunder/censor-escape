@@ -97,10 +97,17 @@ p{margin:0}
 .tok.sel{background:#f1c75b;border-bottom-color:#8a5a00}
 .ch.hint{outline:3px solid var(--stamp);outline-offset:1px}   /* 두 번째 힌트: 맞는 시기 버튼 */
 /* 2단계: 표현 방식별 문서 수 */
-.tcount{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);padding:10px 12px}
+.tcount{position:sticky;top:0;z-index:4;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);padding:10px 12px;box-shadow:0 6px 10px -6px #000c}
 .tcount h3{flex:1 1 100%;margin:0}
 .tcount span{background:#2a2619;border:1px solid #5a4a22;padding:4px 10px;font-size:14px;word-break:keep-all}
 .tcount b{color:var(--amber);margin-left:2px}
+/* 고르는 대로: 남음(노랑) · 다 골랐음(초록) · 너무 많음(빨강) */
+.tcount em{font-style:normal;font-weight:700;margin-left:4px;color:#f1d48a}
+.tcount em:before{content:"· ";color:var(--mute);font-weight:400}
+.tcount span.full{border-color:var(--ok);background:#17301f}.tcount span.full em{color:var(--ok)}
+.tcount span.over{border-color:var(--stamp);background:#3a1712}.tcount span.over em{color:#ff9a8c}
+.tcount small{flex:1 1 100%;font-size:13px;color:var(--mute)}
+.tcount small:empty{display:none}
 /* 미니게임 */
 .mdrawer{position:relative;width:100%;aspect-ratio:5/3;border:4px solid #0a0b0e;box-shadow:inset 0 0 0 3px #3b2a1a,inset 0 18px 30px rgba(0,0,0,.55),6px 6px 0 rgba(0,0,0,.5);
   background:#6b4a2c repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 3px,transparent 3px 46px);background-size:cover;background-position:center;overflow:hidden}
@@ -752,6 +759,10 @@ const TEXT={
     story:"서류함이 열렸다. 어떤 글이 삭제되는지 눈에 익혀 두자. 상관의 지시다. “총독부를 직접 비판하고 저항하는 글에는 삭제 도장을 찍게. 나머지는 통과다.” 문서마다 표현 방식을 고르세요. 모두 맞으면 도장이 찍힙니다.",
     doc:"압수 문서",
     count:"이번 서류함에 든 문서",   // 표현 방식별 문서 수 위에 붙는 말 (개수는 CONFIG.docs에서 저절로 셈)
+    countLeft:"남은 {n}개",           // 고르는 대로 바뀌는 말. {n}: 개수
+    countDone:"✓ 다 골랐어요",
+    countOver:"{n}개 많아요",
+    countUnpicked:"아직 고르지 않은 문서 {n}개",
     submit:"분류 제출",
     hint1:"힌트: 저항의 세기가 아니라 말하는 방식을 보세요. 직접 말하기는 하고 싶은 말을 숨김없이 그대로 밝힙니다. 상징을 통한 돌려 말하기는 계절이나 그리운 대상 같은 다른 것에 빗대어 뜻을 감춥니다. 내면 또는 민족적 정서 말하기는 바깥 현실보다 나의 마음이나 우리 민족이 함께 느끼는 정서(그리움, 한 등)를 노래합니다.",
     hint2:"힌트: 도장이 찍히는 글은 검열관이 한눈에 위험하다고 알아보는 글입니다. 먼저 직접 말하기에 해당하는 문서를 찾아보세요.",
@@ -1315,10 +1326,11 @@ function stage2HTML(){
     <div class="choices" role="group" aria-label="표현 방식">${TYPES.map(t=>`<button type="button" class="ch" data-d="${i}" data-t="${t}">${TLABEL[t]}</button>`).join("")}</div>
     <span class="stamp ${d.type==="직접"?"":"pass"}" id="st${i}">${d.type==="직접"?"삭제":"통과"}</span></div>`).join("");
   // 표현 방식별 문서 수를 미리 알려 줌 (CONFIG.docs에서 셈)
-  const cnt=TYPES.map(t=>`<span>${TLABEL[t]} <b>${CONFIG.docs.filter(d=>d.type===t).length}개</b></span>`).join("");
+  // 고르는 대로 '남은 N개 / 다 골랐어요 / N개 많아요'가 바뀜 (paintCount)
+  const cnt=TYPES.map(t=>`<span data-t="${t}">${TLABEL[t]} <b>${CONFIG.docs.filter(d=>d.type===t).length}개</b><em></em></span>`).join("");
   return `<div style="display:flex;flex-direction:column;gap:14px"><h2>${T(TEXT.s2.title)}</h2>
   <p class="story">${T(TEXT.s2.story)}</p>
-  <div class="tcount"><h3>${T(TEXT.s2.count)}</h3>${cnt}</div>
+  <div class="tcount" id="tcount"><h3>${T(TEXT.s2.count)}</h3>${cnt}<small id="tleft"></small></div>
   <div id="quiz"></div>
   <div class="grid">${docs}</div>
   <div class="row"><button class="btn" id="chk" type="button">${T(TEXT.s2.submit)}</button><button class="btn ghost" id="hn" type="button">${T(TEXT.common.hintBtn)}</button></div>
@@ -1326,8 +1338,20 @@ function stage2HTML(){
 }
 function bindStage2(){
   ui.cls={};
+  // 표현 방식별로 몇 개 남았는지 바로 보여 줌
+  const paintCount=()=>{
+    document.querySelectorAll("#tcount span[data-t]").forEach(s=>{ const t=s.dataset.t;
+      const need=CONFIG.docs.filter(d=>d.type===t).length, got=Object.values(ui.cls).filter(x=>x===t).length, e=s.querySelector("em");
+      s.className=got===need?"full":got>need?"over":"";
+      e.textContent=got===need?T(TEXT.s2.countDone):got>need?T(TEXT.s2.countOver,{n:got-need}):T(TEXT.s2.countLeft,{n:need-got}); });
+    const left=CONFIG.docs.length-Object.keys(ui.cls).length;
+    $("#tleft").textContent=left?T(TEXT.s2.countUnpicked,{n:left}):""; };
   document.querySelectorAll(".ch[data-d]").forEach(b=>b.onclick=()=>{const d=b.dataset.d;ui.cls[d]=b.dataset.t;
-    document.querySelectorAll(`.ch[data-d="${d}"]`).forEach(x=>x.classList.toggle("on",x===b));});
+    document.querySelectorAll(`.ch[data-d="${d}"]`).forEach(x=>x.classList.toggle("on",x===b)); paintCount();});
+  paintCount();
+  // 문서를 보느라 내려도 개수 상자가 맨 위 상태줄 바로 아래에 붙어 있게
+  const tc=$("#tcount"), pb=tc&&tc.closest(".pwrap"), br=pb&&pb.querySelector(".bar");
+  if(br) requestAnimationFrame(()=>{ tc.style.top=br.offsetHeight+"px"; });
   let hs=0;
   $("#hn").onclick=()=>{hint(); $("#msg").className="msg";
     $("#msg").innerHTML=T(hs===0?TEXT.s2.hint1:TEXT.s2.hint2); hs=1;};
